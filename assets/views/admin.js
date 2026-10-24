@@ -34,7 +34,7 @@ export async function renderAdmin(root) {
     autocomplete: 'off'
   });
   const remember = el('input', { type: 'checkbox' });
-  const btnConnect = el('button.btn.btn-primary', { text: '连接', onclick: connect });
+  const btnConnect = el('button.btn.btn-primary', { text: '连接', onclick: () => connect() });
   const connErr = el('p.modal-tip', { style: { display: 'none', color: '#b45309' } });
 
   function connErrText(err) {
