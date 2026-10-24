@@ -35,6 +35,24 @@ export async function renderAdmin(root) {
   });
   const remember = el('input', { type: 'checkbox' });
   const btnConnect = el('button.btn.btn-primary', { text: '连接', onclick: connect });
+  const connErr = el('p.modal-tip', { style: { display: 'none', color: '#b45309' } });
+
+  function connErrText(err) {
+    const m = String((err && err.message) || err);
+    if (/Failed to fetch|NetworkError|Load failed|timeout/i.test(m)) {
+      return '连接失败：浏览器无法访问 api.github.com（网络被墙或代理未开）。请换网络或开启代理后重试。';
+    }
+    if (m.startsWith('401')) {
+      return '连接失败：令牌无效或已失效（401）。注意 Update/Regenerate 后旧令牌立即作废，请重新生成并复制最新值。';
+    }
+    if (m.startsWith('403')) {
+      return '连接失败：令牌权限不足（403）。需要 Contents: Read and write，且仓库范围包含本仓库。';
+    }
+    if (m.startsWith('404')) {
+      return '连接失败：接口不存在（404），请确认令牌类型为 Fine-grained。';
+    }
+    return `连接失败：${m}`;
+  }
   const btnDisconnect = el('button.btn.btn-ghost', {
     text: '断开并清除令牌',
     onclick: () => {
@@ -56,6 +74,7 @@ export async function renderAdmin(root) {
     }
     btnConnect.disabled = true;
     btnConnect.textContent = '连接中…';
+    connErr.style.display = 'none';
     try {
       api.setToken(t, remember.checked);
       const user = await api.whoami();
@@ -67,6 +86,8 @@ export async function renderAdmin(root) {
     } catch (err) {
       api.clearToken();
       authed = false;
+      connErr.textContent = connErrText(err);
+      connErr.style.display = '';
       toast(`连接失败：${err.message}`, 'error');
     } finally {
       btnConnect.disabled = false;
@@ -505,7 +526,8 @@ export async function renderAdmin(root) {
         btnConnect,
         btnDisconnect,
         el('a.btn.btn-ghost', { href: TOKEN_URL, target: '_blank', rel: 'noopener', text: '创建令牌 ↗' })
-      )
+      ),
+      connErr
     ),
     el('div.panel', null,
       el('h2', { text: '上传资源' }),
