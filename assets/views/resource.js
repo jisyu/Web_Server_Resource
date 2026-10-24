@@ -1,6 +1,6 @@
 /** 资源详情页（扫码落地页）：移动端优先，下载按钮固定底栏，线路自动测速 */
 import { el, fmtSize, fmtDate, toast, copyText, downloadBlob, sanitizeFileName } from '../util.js';
-import { CATEGORY_LABEL, candidateLinks, primaryDownloadUrl, pageUrl } from '../config.js';
+import { CONFIG, CATEGORY_LABEL, candidateLinks, primaryDownloadUrl, pageUrl } from '../config.js';
 import { loadManifest } from '../store.js';
 import { detectFastLink, fastLinkNote, measureAll, setManualMode, fmtSpeed } from '../fastlink.js';
 import { api } from '../github-api.js';
@@ -157,7 +157,9 @@ export async function renderResource(root, params) {
         qrPanel
       )
     ),
-    api.authed ? el('div.back-row', null, el('a.btn.btn-ghost', { href: '#/', text: '← 返回列表' })) : null,
+    (CONFIG.publicList || api.authed)
+      ? el('div.back-row', null, el('a.btn.btn-ghost', { href: '#/', text: '← 返回列表' }))
+      : null,
     el('div.cta-bar', null,
       el('div.cta-inner', null, downloadBtn, ctaNote)
     )

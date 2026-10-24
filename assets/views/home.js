@@ -1,6 +1,6 @@
 /** 首页：资源列表（搜索 / 分类筛选 / 权重排序） */
 import { el, clear, fmtSize, fmtDate, debounce } from '../util.js';
-import { CATEGORY_LABEL, primaryDownloadUrl, pageUrl } from '../config.js';
+import { CONFIG, CATEGORY_LABEL, primaryDownloadUrl, pageUrl } from '../config.js';
 import { loadManifest, visibleItems } from '../store.js';
 import { detectFastLink, fastLinkNote } from '../fastlink.js';
 import { openQrModal } from '../qrmodal.js';
@@ -13,8 +13,8 @@ const SORTS = {
 };
 
 export async function renderHome(root) {
-  // 未登录（本机无令牌）时只展示入口：资源列表不公开，访客一律凭二维码进入详情页
-  if (!api.authed) {
+  // publicList=false 且本机无令牌时只展示入口：列表不公开，访客凭二维码进入详情页
+  if (!CONFIG.publicList && !api.authed) {
     root.append(
       el('div.page-head', null,
         el('h1', { text: '资源下载' }),

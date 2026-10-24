@@ -15,6 +15,9 @@ export const CONFIG = {
   maxUploadBytes: 100 * 1024 * 1024, // GitHub Contents API 单文件上限
   cdnSafeBytes: 50 * 1024 * 1024, // 超过此大小不建议使用 jsDelivr
   fileSizeWarnBytes: 50 * 1024 * 1024, // 上传时提示阈值
+  // 首页资源列表是否对所有人公开（true = 访客也能看到列表；false = 仅本机有令牌时可见，访客只能凭二维码进详情页）
+  publicList: true,
+
   // 默认下载链接走哪条链路：auto = 打开页面时自动测速选最快
   // 也可固定为 pages / raw / cdn 或下面的镜像 mode
   downloadPrimary: 'auto',
