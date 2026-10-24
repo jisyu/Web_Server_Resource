@@ -113,6 +113,10 @@ export async function renderAdmin(root) {
 
   const queue = el('div.queue');
   const btnUpload = el('button.btn.btn-primary', { text: '开始上传', onclick: () => doUpload() });
+  const uploadTip = el('p.modal-tip', {
+    text: '按钮置灰是因为尚未连接 GitHub：请滚动到页面顶部「连接 GitHub」，填入令牌并点「连接」。',
+    style: { display: 'none', color: '#b45309' }
+  });
 
   function addFiles(files) {
     for (const f of files) {
@@ -120,6 +124,12 @@ export async function renderAdmin(root) {
       pending.push({ file: f, name: f.name, size: f.size });
     }
     renderQueue();
+  }
+
+  function syncUploadUI() {
+    btnUpload.disabled = !authed || !pending.length;
+    btnUpload.textContent = pending.length ? `开始上传（${pending.length}）` : '开始上传';
+    uploadTip.style.display = !authed && pending.length ? '' : 'none';
   }
 
   function renderQueue() {
@@ -147,6 +157,7 @@ export async function renderAdmin(root) {
     }
     btnUpload.disabled = !authed || !pending.length;
     btnUpload.textContent = pending.length ? `开始上传（${pending.length}）` : '开始上传';
+    syncUploadUI();
   }
 
   async function doUpload() {
@@ -470,7 +481,7 @@ export async function renderAdmin(root) {
   function syncAuthUI() {
     for (const c of writeCtrls) c.disabled = !authed;
     btnSave.disabled = !authed || !dirty;
-    btnUpload.disabled = !authed || !pending.length;
+    syncUploadUI();
     btnExport.disabled = false;
     btnRefresh.disabled = false;
   }
@@ -509,7 +520,8 @@ export async function renderAdmin(root) {
         el('div.field', { style: { gridColumn: '1 / -1' } }, el('label', { text: '描述（可选）' }), descInput)
       ),
       queue,
-      el('div.form-actions', null, btnUpload)
+      el('div.form-actions', null, btnUpload),
+      uploadTip
     ),
     el('div.panel', null,
       el('h2', { text: '资源清单' }),
