@@ -3,6 +3,7 @@ import { el, fmtSize, fmtDate, toast, copyText, downloadBlob, sanitizeFileName }
 import { CATEGORY_LABEL, candidateLinks, primaryDownloadUrl, pageUrl } from '../config.js';
 import { loadManifest } from '../store.js';
 import { detectFastLink, fastLinkNote, measureAll, setManualMode, fmtSpeed } from '../fastlink.js';
+import { api } from '../github-api.js';
 import { qrSvg, qrPngBlob } from '../qr.js';
 
 export async function renderResource(root, params) {
@@ -156,7 +157,7 @@ export async function renderResource(root, params) {
         qrPanel
       )
     ),
-    el('div.back-row', null, el('a.btn.btn-ghost', { href: '#/', text: '← 返回列表' })),
+    api.authed ? el('div.back-row', null, el('a.btn.btn-ghost', { href: '#/', text: '← 返回列表' })) : null,
     el('div.cta-bar', null,
       el('div.cta-inner', null, downloadBtn, ctaNote)
     )

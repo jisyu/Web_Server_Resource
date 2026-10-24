@@ -4,6 +4,7 @@ import { CATEGORY_LABEL, primaryDownloadUrl, pageUrl } from '../config.js';
 import { loadManifest, visibleItems } from '../store.js';
 import { detectFastLink, fastLinkNote } from '../fastlink.js';
 import { openQrModal } from '../qrmodal.js';
+import { api } from '../github-api.js';
 
 const SORTS = {
   weight: (a, b) => 0, // 沿用清单默认排序（置顶 → 权重 → 时间 → 名称）
@@ -12,6 +13,22 @@ const SORTS = {
 };
 
 export async function renderHome(root) {
+  // 未登录（本机无令牌）时只展示入口：资源列表不公开，访客一律凭二维码进入详情页
+  if (!api.authed) {
+    root.append(
+      el('div.page-head', null,
+        el('h1', { text: '资源下载' }),
+        el('p', { text: '请扫描资源对应的二维码，打开下载页获取文件。' })
+      ),
+      el('div.empty', null,
+        el('h2', { text: '资源列表仅管理员可见' }),
+        el('p', { text: '资源地址使用随机标识，不会公开索引；扫码即可下载，不受影响。' }),
+        el('a.btn.btn-primary', { href: '#/admin', text: '管理员入口' })
+      )
+    );
+    return;
+  }
+
   const data = await loadManifest();
   const state = { kw: '', cat: 'all', sort: 'weight' };
 
