@@ -1,8 +1,8 @@
 /** 资源详情页（扫码落地页）：移动端优先，下载按钮固定底栏，线路自动测速 */
 import { el, fmtSize, fmtDate, toast, copyText, downloadBlob, sanitizeFileName } from '../util.js';
-import { CATEGORY_LABEL, fileUrls, primaryDownloadUrl, pageUrl } from '../config.js';
+import { CATEGORY_LABEL, candidateLinks, primaryDownloadUrl, pageUrl } from '../config.js';
 import { loadManifest } from '../store.js';
-import { detectFastLink, fastLinkNote } from '../fastlink.js';
+import { detectFastLink, fastLinkNote, measureAll, setManualMode, fmtSpeed } from '../fastlink.js';
 import { qrSvg, qrPngBlob } from '../qr.js';
 
 export async function renderResource(root, params) {
@@ -23,20 +23,7 @@ export async function renderResource(root, params) {
 
   document.body.classList.add('has-cta');
 
-  const urls = fileUrls(item.path);
   const qrUrl = pageUrl(item.id);
-
-  const linkRow = (label, url) =>
-    el('div.link-item', null,
-      el('span', { text: `${label}：${url}` }),
-      el('button.btn.btn-sm.btn-ghost', {
-        text: '复制',
-        onclick: async () => {
-          const ok = await copyText(url);
-          toast(ok ? '已复制链接' : '复制失败', ok ? 'ok' : 'error');
-        }
-      })
-    );
 
   const qrWrap = el('div.qr-svg');
   qrWrap.innerHTML = qrSvg(qrUrl, { cell: 8, margin: 2 });
@@ -85,14 +72,67 @@ export async function renderResource(root, params) {
     }
   });
 
-  /* ---- 备用线路：折叠，不占首屏 ---- */
-  const linkList = el('div.link-list', null,
-    linkRow(`Pages（推荐）`, urls.pages),
-    linkRow('Raw', urls.raw),
-    linkRow('CDN', urls.cdn)
-  );
+  /* ---- 线路列表：折叠，可看各线路实测速度并手动切换 ---- */
+  const links = candidateLinks(item.path);
+  const rows = new Map();
+
+  const applyMode = (mode, kbps, auto = false, est = false) => {
+    setManualMode(mode, kbps || 0);
+    downloadBtn.href = primaryDownloadUrl(item.path, item.size);
+    const l = links.find((x) => x.mode === mode);
+    const label = l ? l.label : mode;
+    const spd = kbps ? `（${fmtSpeed(kbps, est)}）` : '';
+    ctaNote.textContent = auto ? `已自动选择最快线路：${label}${spd}` : `已切换线路：${label}${spd}`;
+    rows.forEach((r, m) => r.row.classList.toggle('active', m === mode));
+  };
+
+  const linkList = el('div.link-list');
+  for (const l of links) {
+    const speedEl = el('span.diag-speed', { text: '' });
+    const row = el('div.link-item', { title: l.url },
+      el('span.link-label', { text: l.label }),
+      speedEl,
+      el('button.btn.btn-sm.btn-ghost', {
+        text: '复制',
+        onclick: async () => {
+          const ok = await copyText(l.url);
+          toast(ok ? '已复制链接' : '复制失败', ok ? 'ok' : 'error');
+        }
+      }),
+      el('button.btn.btn-sm', {
+        text: '用这条',
+        onclick: () => applyMode(l.mode, Number(speedEl.dataset.kbps || 0))
+      })
+    );
+    rows.set(l.mode, { row, speedEl });
+    linkList.append(row);
+  }
+
+  const remeasureBtn = el('button.btn.btn-sm.btn-ghost', { text: '重新测速', onclick: () => runMeasure() });
+
+  async function runMeasure() {
+    remeasureBtn.disabled = true;
+    remeasureBtn.textContent = '测速中…';
+    const r = await measureAll(item.path);
+    if (r) {
+      for (const l of r.list) {
+        const hit = rows.get(l.mode);
+        if (!hit) continue;
+        hit.speedEl.textContent = l.ok ? fmtSpeed(l.kbps, l.est) : '不可用';
+        hit.speedEl.dataset.kbps = l.ok ? String(l.kbps) : '';
+        hit.speedEl.classList.toggle('bad', !l.ok);
+      }
+      if (r.best) applyMode(r.best.mode, r.best.kbps, true, r.best.est);
+      else toast('所有线路均不可用，请稍后重试', 'error');
+    }
+    remeasureBtn.textContent = '重新测速';
+    remeasureBtn.disabled = false;
+  }
+
   const linkDetails = el('details.link-details', null,
-    el('summary', { text: '下载慢？切换其它线路 ▾' }),
+    el('summary', { text: '下载慢？查看各线路速度 / 手动切换 ▾' }),
+    el('p.modal-tip', { text: '打开页面时已自动测速并选用最快线路；若仍慢，可在此手动切换。' }),
+    remeasureBtn,
     linkList
   );
 
@@ -124,13 +164,8 @@ export async function renderResource(root, params) {
 
   /* ---- 自动测速：把最快的线路设为主下载链接 ---- */
   const result = await detectFastLink(item.path);
-  if (result) {
-    downloadBtn.href = primaryDownloadUrl(item.path, item.size);
-    if (result.mode === 'cdn' && item.size > 50 * 1024 * 1024) {
-      downloadBtn.href = urls.raw;
-    }
-  }
-  ctaNote.textContent = fastLinkNote(result);
+  if (result) applyMode(result.mode, result.kbps || 0, true, result.est);
+  else ctaNote.textContent = fastLinkNote(null);
 
   return {
     destroy: () => document.body.classList.remove('has-cta')

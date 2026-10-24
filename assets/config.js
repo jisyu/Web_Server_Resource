@@ -15,11 +15,67 @@ export const CONFIG = {
   maxUploadBytes: 100 * 1024 * 1024, // GitHub Contents API 单文件上限
   cdnSafeBytes: 50 * 1024 * 1024, // 超过此大小不建议使用 jsDelivr
   fileSizeWarnBytes: 50 * 1024 * 1024, // 上传时提示阈值
-  // 默认下载链接走哪条链路：pages（Pages 同源，页面能打开就能下载，国内最稳）
-  // 可选 cdn（jsDelivr，国内不稳定）/ raw（raw.githubusercontent）
-  // 设为 'auto' 时打开详情页会自动测速，选最快的线路
-  downloadPrimary: 'auto'
+  // 默认下载链接走哪条链路：auto = 打开页面时自动测速选最快
+  // 也可固定为 pages / raw / cdn 或下面的镜像 mode
+  downloadPrimary: 'auto',
+
+  // 自建镜像前缀（填了就参与测速，国内最稳的方案）
+  // 支持 {owner} {repo} {branch} 占位符，末尾保留 /
+  // 例：'https://gitee.com/jisyu/Web_Server_Resource/raw/main/'
+  // 例：'https://cdn.example.com/'（对象存储/CDN 根目录，目录结构同仓库）
+  mirrors: [],
+
+  // 内置加速节点（免配置，可用性与速度随节点波动，测速后自动取舍）
+  builtinMirrors: [
+    ['ghfast', 'https://ghfast.top/https://raw.githubusercontent.com/{owner}/{repo}/{branch}/'],
+    ['gitmirror', 'https://raw.gitmirror.com/https://raw.githubusercontent.com/{owner}/{repo}/{branch}/'],
+    ['ghproxy', 'https://gh-proxy.com/https://raw.githubusercontent.com/{owner}/{repo}/{branch}/'],
+    ['jsdfastly', 'https://fastly.jsdelivr.net/gh/{owner}/{repo}@{branch}/'],
+    ['jsdgcore', 'https://gcore.jsdelivr.net/gh/{owner}/{repo}@{branch}/']
+  ]
 };
+
+export const MODE_LABEL = {
+  pages: 'GitHub Pages',
+  raw: 'GitHub Raw',
+  cdn: 'jsDelivr',
+  ghfast: '加速节点 A',
+  gitmirror: '加速节点 B',
+  ghproxy: '加速节点 C',
+  jsdfastly: 'jsDelivr(fastly)',
+  jsdgcore: 'jsDelivr(gcore)'
+};
+
+function fillTemplate(tpl) {
+  return String(tpl)
+    .replace('{owner}', CONFIG.owner)
+    .replace('{repo}', CONFIG.repo)
+    .replace('{branch}', CONFIG.branch);
+}
+
+/**
+ * 所有可下载线路（mode + 名称 + 完整 URL）。
+ * 本地预览时只有同源一条。
+ */
+export function candidateLinks(relPath) {
+  const rel = String(relPath || '').replace(/^\/+/, '');
+  if (isLocalHost()) {
+    const abs = new URL(rel, location.href).href;
+    return [{ mode: 'pages', label: '本地预览', url: abs }];
+  }
+  const list = [
+    { mode: 'pages', label: MODE_LABEL.pages, url: `https://${CONFIG.owner}.github.io/${CONFIG.repo}/${rel}` },
+    { mode: 'raw', label: MODE_LABEL.raw, url: `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${rel}` },
+    { mode: 'cdn', label: MODE_LABEL.cdn, url: `https://cdn.jsdelivr.net/gh/${CONFIG.owner}/${CONFIG.repo}@${CONFIG.branch}/${rel}` }
+  ];
+  for (const [mode, tpl] of CONFIG.builtinMirrors || []) {
+    list.push({ mode, label: MODE_LABEL[mode] || mode, url: fillTemplate(tpl) + rel });
+  }
+  (CONFIG.mirrors || []).forEach((tpl, i) => {
+    list.push({ mode: `m${i}`, label: `自建镜像 ${i + 1}`, url: fillTemplate(tpl) + rel });
+  });
+  return list;
+}
 
 /** 运行时选定的最快线路（由测速写入，优先于 CONFIG.downloadPrimary） */
 let runtimeMode = null;
@@ -70,17 +126,18 @@ export function fileUrls(relPath) {
 }
 
 /**
- * 主下载链接：优先用测速选出的最快线路，否则用 CONFIG.downloadPrimary。
+ * 主下载链接：优先用测速/手动选出的线路，否则用 CONFIG.downloadPrimary。
  * cdn 模式下超 50MB 自动切 raw。
  */
 export function primaryDownloadUrl(relPath, size) {
-  const urls = fileUrls(relPath);
-  const mode = runtimeMode || CONFIG.downloadPrimary || 'pages';
-  if (mode === 'cdn') {
-    return typeof size === 'number' && size > CONFIG.cdnSafeBytes ? urls.raw : urls.cdn;
-  }
-  if (mode === 'raw') return urls.raw;
-  return urls.pages;
+  const links = candidateLinks(relPath);
+  let mode = runtimeMode || CONFIG.downloadPrimary || 'pages';
+  if (mode === 'auto') mode = 'pages'; // 测速未完成时的兜底
+  const pick = (m) => links.find((c) => c.mode === m);
+  const tooBig = typeof size === 'number' && size > CONFIG.cdnSafeBytes;
+  if (mode === 'cdn' && tooBig) mode = 'raw';
+  const hit = pick(mode) || pick('pages');
+  return hit ? hit.url : links[0].url;
 }
 
 /**
