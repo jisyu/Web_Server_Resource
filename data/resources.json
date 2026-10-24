@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-24T03:49:26.286Z",
+  "categories": [
+    "apk",
+    "doc",
+    "image",
+    "other"
+  ],
+  "items": [
+    {
+      "id": "x3xfzvcp",
+      "name": "Light RGBYW 灯效控制",
+      "fileName": "Light_RGBYW-release.apk",
+      "path": "files/apk/Light_RGBYW-release.apk",
+      "category": "apk",
+      "tags": [
+        "Android",
+        "正式版"
+      ],
+      "description": "灯光控制 App 正式版安装包（Light_RGBYW）",
+      "version": "1.1.0",
+      "size": 30393445,
+      "sha1": "e60d5b7e4fe00b82fc1263ce9d1755a2f2401ec0",
+      "mime": "",
+      "weight": 100,
+      "pinned": true,
+      "visible": true,
+      "releaseNotes": "正式版安装包：扫码打开本页后点击下载，可直接安装。若主链接慢，请用下方备用链接。",
+      "createdAt": "2026-10-24T03:42:22.726Z",
+      "updatedAt": "2026-10-24T03:49:26.284Z"
+    }
+  ]
+}

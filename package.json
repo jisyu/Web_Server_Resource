@@ -1,0 +1,15 @@
+{
+  "name": "web-server-resource",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "扫码下载的资源分发站：静态站点 + GitHub API 管理端，无后端、无构建",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "manage": "node tools/manage.mjs",
+    "list": "node tools/manage.mjs list",
+    "sync": "node tools/manage.mjs sync",
+    "qr": "node tools/manage.mjs qr"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="扫码即可下载的资源分发站：安装包、文档、图片等资源的上传、管理与分发。">
+<title>资源下载站</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M16 7v12m0 0l-5-5m5 5l5-5M8 24h16' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#/">
+    <span class="logo" aria-hidden="true">WSR</span>
+    <span class="brand-text">资源下载站</span>
+  </a>
+  <nav class="nav">
+    <a href="#/" data-nav="/">首页</a>
+    <a href="#/admin" data-nav="/admin">管理</a>
+  </nav>
+</header>
+
+<main id="app" class="app">
+  <div class="loading"><div class="spinner"></div><span>加载中…</span></div>
+</main>
+
+<footer class="footer">
+  <span>资源由 <b id="footer-repo">GitHub</b> 托管分发</span>
+  <span class="dot">·</span>
+  <span>扫码即可下载</span>
+</footer>
+
+<script type="module" src="./assets/app.js"></script>
+</body>
+</html>

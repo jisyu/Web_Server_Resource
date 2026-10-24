@@ -1,0 +1,4 @@
+# 统一换行，避免 Windows 提交时把 LF 变成 CRLF
+* text=auto eol=lf
+*.apk binary
+*.png binary
