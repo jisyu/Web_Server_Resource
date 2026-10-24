@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-24T03:49:26.286Z",
+  "updatedAt": "2026-10-24T07:23:20.584Z",
   "categories": [
     "apk",
     "doc",
@@ -29,6 +29,44 @@
       "releaseNotes": "正式版安装包：扫码打开本页后点击下载，可直接安装。若主链接慢，请用下方备用链接。",
       "createdAt": "2026-10-24T03:42:22.726Z",
       "updatedAt": "2026-10-24T03:49:26.284Z"
+    },
+    {
+      "id": "tvkhsrbr",
+      "name": "小程序-RGBYW-release",
+      "fileName": "小程序-RGBYW-release.png",
+      "path": "files/image/小程序-RGBYW-release.png",
+      "category": "image",
+      "tags": [],
+      "description": "",
+      "version": "",
+      "size": 3347,
+      "sha1": "ab9dea7e1f58da68584f6fbe39ec402ba7ea7c97",
+      "mime": "image/png",
+      "weight": 110,
+      "pinned": false,
+      "visible": true,
+      "releaseNotes": "",
+      "createdAt": "2026-10-24T07:14:37.333Z",
+      "updatedAt": "2026-10-24T07:14:37.333Z"
+    },
+    {
+      "id": "ny2m6m8u",
+      "name": "Light_RGBCW_source",
+      "fileName": "src-snapshot.zip",
+      "path": "files/other/src-snapshot.zip",
+      "category": "other",
+      "tags": [],
+      "description": "",
+      "version": "1.1.0",
+      "size": 4157407,
+      "sha1": "6056a6a0bef48139077148452e6915b5cc4e43d9",
+      "mime": "application/x-zip-compressed",
+      "weight": 120,
+      "pinned": false,
+      "visible": true,
+      "releaseNotes": "",
+      "createdAt": "2026-10-24T07:22:29.709Z",
+      "updatedAt": "2026-10-24T07:22:29.709Z"
     }
   ]
 }
