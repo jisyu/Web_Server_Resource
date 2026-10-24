@@ -68,12 +68,13 @@ export async function renderResource(root, params) {
             target: '_blank',
             rel: 'noopener'
           }),
-          tooBig ? el('p.modal-tip', { text: '文件较大，已使用 raw 直链；若下载慢可换用备用链接。' }) : null
+          tooBig ? el('p.modal-tip', { text: '文件较大，若下载慢可换用下方 Raw / CDN 备用链接。' }) : null
         ),
         el('div.link-list', null,
-          el('h4', { text: '备用链接' }),
-          linkRow('CDN', urls.cdn),
+          el('h4', { text: '全部下载链接（主链接下载慢时可换用）' }),
+          linkRow('Pages（默认）', urls.pages),
           linkRow('Raw', urls.raw),
+          linkRow('CDN', urls.cdn),
           linkRow('文件名', item.fileName || '-')
         )
       ),

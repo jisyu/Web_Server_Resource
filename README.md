@@ -13,9 +13,10 @@
 | 站点 | 纯静态 HTML/CSS/JS（原生 ES Module，无框架、无打包） |
 | 存储 | 仓库内 `files/`（资源文件）+ `data/resources.json`（清单，唯一数据源） |
 | 管理 | 浏览器直连 GitHub REST API（个人令牌），上传/编辑/权重/删除均写入仓库 |
-| 分发 | 小文件走 jsDelivr CDN，大文件自动切 raw 直链 |
+| 分发 | 默认走 Pages 同源自链（页面能打开就能下载），详情页另提供 raw / jsDelivr 备用链接 |
 
-GitHub Pages 不能运行后端代码，因此"服务器"由「静态站点 + GitHub API」组合实现：读走 CDN/raw，写走 API。
+GitHub Pages 不能运行后端代码，因此"服务器"由「静态站点 + GitHub API」组合实现：读走同源/raw，写走 API。
+> jsDelivr 在国内访问不稳定，因此默认下载链路用 Pages 同源；想改回 CDN 优先，把 `assets/config.js` 里的 `downloadPrimary` 改成 `cdn` 即可。
 
 ## 目录
 
@@ -51,7 +52,7 @@ Fine-grained personal access token（https://github.com/settings/personal-access
 | 项 | 上限 | 说明 |
 | --- | --- | --- |
 | 单文件 | 100 MB | Contents API 硬上限；更大的文件用本地 CLI + git 提交 |
-| CDN 文件 | 约 50 MB | 超过则自动改用 raw 直链下载 |
+| 下载链路 | — | 默认 Pages 同源；jsDelivr 对 >50 MB 文件支持不佳，仅作备用 |
 | 仓库体积 | 1 GB（软） | 建议定期清理历史版本 |
 | Pages 生效 | 数十秒~数分钟 | 保存后页面会提示"稍后生效" |
 

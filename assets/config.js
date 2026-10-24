@@ -14,7 +14,10 @@ export const CONFIG = {
   apiVersion: '2022-11-28',
   maxUploadBytes: 100 * 1024 * 1024, // GitHub Contents API 单文件上限
   cdnSafeBytes: 50 * 1024 * 1024, // 超过此大小不建议使用 jsDelivr
-  fileSizeWarnBytes: 50 * 1024 * 1024 // 上传时提示阈值
+  fileSizeWarnBytes: 50 * 1024 * 1024, // 上传时提示阈值
+  // 默认下载链接走哪条链路：pages（Pages 同源，页面能打开就能下载，国内最稳）
+  // 可选 cdn（jsDelivr，国内不稳定）/ raw（raw.githubusercontent）
+  downloadPrimary: 'pages'
 };
 
 export const CATEGORY_LABEL = {
@@ -54,11 +57,18 @@ export function fileUrls(relPath) {
   return { cdn: base + rel, raw: rawBase + rel, pages: pagesBase + rel };
 }
 
-/** 依据大小挑选默认下载链接：小文件走 CDN，大文件走 raw（更稳） */
+/**
+ * 主下载链接：默认走 Pages 同源（页面打得开就下得了，国内最稳）。
+ * 可通过 CONFIG.downloadPrimary 切换为 cdn / raw；cdn 模式下超 50MB 自动切 raw。
+ */
 export function primaryDownloadUrl(relPath, size) {
   const urls = fileUrls(relPath);
-  if (typeof size === 'number' && size > CONFIG.cdnSafeBytes) return urls.raw;
-  return urls.cdn;
+  const mode = CONFIG.downloadPrimary || 'pages';
+  if (mode === 'cdn') {
+    return typeof size === 'number' && size > CONFIG.cdnSafeBytes ? urls.raw : urls.cdn;
+  }
+  if (mode === 'raw') return urls.raw;
+  return urls.pages;
 }
 
 /**
