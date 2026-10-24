@@ -2,6 +2,7 @@
 import { el, clear, fmtSize, fmtDate, debounce } from '../util.js';
 import { CATEGORY_LABEL, primaryDownloadUrl, pageUrl } from '../config.js';
 import { loadManifest, visibleItems } from '../store.js';
+import { detectFastLink, fastLinkNote } from '../fastlink.js';
 import { openQrModal } from '../qrmodal.js';
 
 const SORTS = {
@@ -75,6 +76,8 @@ export async function renderHome(root) {
     for (const item of list) grid.append(card(item, data));
   }
 
+  const speedNote = el('p.speed-note', { text: '', style: { display: 'none' } });
+
   root.append(
     el('div.page-head', null,
       el('h1', { text: '资源列表' }),
@@ -86,9 +89,21 @@ export async function renderHome(root) {
       sortSel,
       count
     ),
+    speedNote,
     grid
   );
   paint();
+
+  // 后台测速，自动把最快的下载线路应用到所有“下载”按钮
+  const first = visibleItems(data)[0];
+  if (first) {
+    const result = await detectFastLink(first.path);
+    if (result) {
+      speedNote.textContent = fastLinkNote(result);
+      speedNote.style.display = '';
+      paint(); // 用新线路重绘下载链接
+    }
+  }
 }
 
 function card(item, data) {

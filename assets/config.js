@@ -17,8 +17,20 @@ export const CONFIG = {
   fileSizeWarnBytes: 50 * 1024 * 1024, // 上传时提示阈值
   // 默认下载链接走哪条链路：pages（Pages 同源，页面能打开就能下载，国内最稳）
   // 可选 cdn（jsDelivr，国内不稳定）/ raw（raw.githubusercontent）
-  downloadPrimary: 'pages'
+  // 设为 'auto' 时打开详情页会自动测速，选最快的线路
+  downloadPrimary: 'auto'
 };
+
+/** 运行时选定的最快线路（由测速写入，优先于 CONFIG.downloadPrimary） */
+let runtimeMode = null;
+
+export function setPreferredMode(mode) {
+  runtimeMode = mode;
+}
+
+export function getPreferredMode() {
+  return runtimeMode;
+}
 
 export const CATEGORY_LABEL = {
   apk: '安装包',
@@ -58,12 +70,12 @@ export function fileUrls(relPath) {
 }
 
 /**
- * 主下载链接：默认走 Pages 同源（页面打得开就下得了，国内最稳）。
- * 可通过 CONFIG.downloadPrimary 切换为 cdn / raw；cdn 模式下超 50MB 自动切 raw。
+ * 主下载链接：优先用测速选出的最快线路，否则用 CONFIG.downloadPrimary。
+ * cdn 模式下超 50MB 自动切 raw。
  */
 export function primaryDownloadUrl(relPath, size) {
   const urls = fileUrls(relPath);
-  const mode = CONFIG.downloadPrimary || 'pages';
+  const mode = runtimeMode || CONFIG.downloadPrimary || 'pages';
   if (mode === 'cdn') {
     return typeof size === 'number' && size > CONFIG.cdnSafeBytes ? urls.raw : urls.cdn;
   }
